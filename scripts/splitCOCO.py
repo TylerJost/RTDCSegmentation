@@ -5,7 +5,7 @@ import random
 import shutil
 
  # %% Try to make new json files
- def splitCOCO(originalFile, percentTrain=0.75, seed=1234):
+def splitCOCO(originalFile, percentTrain=0.75, seed=1234):
     """
     Takes a COCO-formatted JSON file and splits into a train and test dataset
     
