@@ -59,3 +59,4 @@ data['categories'] = [{'id': 1, 'name': 'mcf10a', 'supercategory': ''}, \
 testJsonNew = os.path.join(dataDir, 'annotations', 'test-annotated.json')
 with open(testJsonNew, "w") as outfile:
     json.dump(data, outfile)
+# %%
