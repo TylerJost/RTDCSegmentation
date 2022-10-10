@@ -49,6 +49,7 @@ for idx, img in enumerate(data['annotations']):
 
 for img in data['annotations']:
     cellLine = img['image_id'].split('-')[-1]
+    allLines.append(cellLine)
     img['category_id'] = categoryDict[cellLine]
 
 data['categories'] = [{'id': 1, 'name': 'mcf10a', 'supercategory': ''}, \
