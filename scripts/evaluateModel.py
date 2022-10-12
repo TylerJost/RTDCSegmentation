@@ -30,6 +30,8 @@ from detectron2.config import get_cfg
 from detectron2.utils.visualizer import Visualizer
 from detectron2.data import MetadataCatalog, DatasetCatalog
 from detectron2.structures import BoxMode
+from detectron2.utils.visualizer import ColorMode
+
 # %%
 os.listdir('../data')
 
@@ -85,3 +87,48 @@ from detectron2.data import build_detection_test_loader
 evaluator = COCOEvaluator('allCells_test', output_dir='./output/segmentCells')
 val_loader = build_detection_test_loader(cfg, "allCells_test")
 print(inference_on_dataset(predictor.model, val_loader, evaluator))
+# %% Evaluate num correct
+dataset_dicts = DatasetCatalog['allCells_test']()
+# %%
+lines = []
+for d in dataset_dicts:
+    im = cv2.imread(d["file_name"])
+    outputs = predictor(im)  
+    predType = outputs['instances'].pred_classes.item()
+    lines.append(predType)
+# %%
+nIms = 1
+imSpace = 1
+lines = []
+for d in random.sample(dataset_dicts, nIms): 
+    im = cv2.imread(d["file_name"])
+    outputs = predictor(im)  # format is documented at https://detectron2.readthedocs.io/tutorials/models.html#model-output-format
+    v = Visualizer(im[:, :, ::-1],
+                   metadata=MetadataCatalog.get('allCells_test'),
+                   scale=1,
+                   instance_mode=ColorMode.IMAGE_BW   # remove the colors of unsegmented pixels. This option is only available for segmentation models
+    )
+    out = v.draw_instance_predictions(outputs["instances"].to("cpu"))
+    plt.imshow(out.get_image()[:, :, ::-1])
+    plt.title(d['file_name'])
+    print(outputs['instances'].pred_classes)
+
+# %% Find accuracy
+predicted = []
+actual = []
+scores = []
+correct = 0
+cellDict = {'mcf10a': 1, 'mda_mb_231': 2, 'mcf7': 3}
+for d in dataset_dicts:
+    im = cv2.imread(d["file_name"])    
+    cellLine = d["file_name"].split('.tif')[0].split('-')[-1]
+    outputs = predictor(im)
+    bestPred = np.argmax(outputs['instances'].scores)
+    scores.append(outputs['instances'].scores[bestPred])
+    predictedVal = outputs['instances'].pred_classes[bestPred].item()+1
+    actualVal = cellDict[cellLine]
+    predicted.append(predictedVal)
+    actual.append(actualVal)
+    if predictedVal == actualVal:
+        correct += 1
+print(f'Accuracy: {correct/len(dataset_dicts):0.2f}')
